@@ -67,7 +67,7 @@ if [[ -n "$PROMPT_GIT_PROGRESS_COLOR" ]]; then sbp_git_progress_color="$PROMPT_G
 if [[ -n "$PROMPT_SYMBOL_COLOR" ]]; then sbp_symbol_color="$PROMPT_SYMBOL_COLOR"; fi
 
 # Set up symbols
-sbp_synced_symbol=""
+sbp_synced_symbol="✓"
 sbp_dirty_synced_symbol="*"
 sbp_unpushed_symbol="△"
 sbp_dirty_unpushed_symbol="▲"
