@@ -112,7 +112,7 @@ function sbp_get_git_progress() {
 
   # git merge
   if [[ -f "$git_dir/MERGE_HEAD" ]]; then
-    echo " [merge]"
+    echo " [merge conflicts]"
   elif [[ -d "$git_dir/rebase-apply" ]]; then
     # git am
     if [[ -f "$git_dir/rebase-apply/applying" ]]; then

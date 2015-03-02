@@ -148,4 +148,4 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 ## License
 Copyright (c) 2013 Todd Wolfson
 
-Licensed under the MIT license...
+Licensed under the MIT license.
