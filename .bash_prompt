@@ -20,12 +20,20 @@ if tput setaf 1 &> /dev/null; then
 
   # If the terminal supports at least 256 colors, write out our 256 color based set
   if [[ "$(tput colors)" -ge 256 ]] &> /dev/null; then
-    sbp_user_color="$sbp_bold$(tput setaf 27)" # BOLD BLUE
+    # Some common colors
+    sbp_git_bold_red="$sbp_bold$(tput setaf 9)" # BOLD RED
+    sbp_git_bold_yellow="$sbp_bold$(tput setaf 220)" # BOLD YELLOW
+    sbp_git_bold_green="$sbp_bold$(tput setaf 76)" # BOLD GREEN
+    sbp_git_bold_blue="$sbp_bold$(tput setaf 27)" # BOLD BLUE
+    sbp_git_bold_orange="$sbp_bold$(tput setaf 208)" # BOLD BLUE
+
+
+    sbp_user_color="$sbp_git_bold_blue" # BOLD BLUE
     sbp_preposition_color="$sbp_bold$(tput setaf 7)" # BOLD WHITE
     sbp_device_color="$sbp_bold$(tput setaf 39)" # BOLD CYAN
-    sbp_dir_color="$sbp_bold$(tput setaf 76)" # BOLD GREEN
-    sbp_git_status_color="$sbp_bold$(tput setaf 154)" # BOLD YELLOW
-    sbp_git_progress_color="$sbp_bold$(tput setaf 9)" # BOLD RED
+    sbp_dir_color="$sbp_reset" # DEFAULT
+    sbp_git_status_color="$sbp_git_bold_blue" # BOLD YELLOW
+    sbp_git_progress_color="$sbp_git_bold_red" # BOLD RED
   else
   # Otherwise, use colors from our set of 8
     sbp_user_color="$sbp_bold$(tput setaf 4)" # BOLD BLUE
@@ -67,14 +75,11 @@ if [[ -n "$PROMPT_GIT_PROGRESS_COLOR" ]]; then sbp_git_progress_color="$PROMPT_G
 if [[ -n "$PROMPT_SYMBOL_COLOR" ]]; then sbp_symbol_color="$PROMPT_SYMBOL_COLOR"; fi
 
 # Set up symbols
-sbp_synced_symbol="✓"
-sbp_dirty_synced_symbol="*"
-sbp_unpushed_symbol="△"
-sbp_dirty_unpushed_symbol="▲"
-sbp_unpulled_symbol="▽"
-sbp_dirty_unpulled_symbol="▼"
-sbp_unpushed_unpulled_symbol="⬡"
-sbp_dirty_unpushed_unpulled_symbol="⬢"
+sbp_synced_symbol="${sbp_git_bold_green}✔ In Sync${sbp_reset}";
+sbp_dirty_symbol="${sbp_git_bold_orange}† Uncommited Changes${sbp_reset}"
+sbp_unpushed_symbol="${sbp_git_bold_yellow}△ Can Push${sbp_reset}"
+sbp_unpulled_symbol="${sbp_git_bold_yellow}▽ Outdated${sbp_reset}"
+sbp_unpushed_unpulled_symbol="${sbp_git_bold_red}✘ Out of Sync${sbp_reset}"
 
 # Apply symbol overrides that have been set in the environment
 # DEV: Working unicode symbols can be determined via the following gist
@@ -155,8 +160,10 @@ sbp_branch_exists () {
 
 sbp_parse_git_ahead () {
   # Grab the local and remote branch
-  branch="$(sbp_get_git_branch)"
-  remote_branch="origin/$branch"
+  LOCAL_BRANCH=`sbp_get_git_branch`
+  TRACKING_BRANCH=`git config branch.$LOCAL_BRANCH.merge | sed -e 's/refs\/heads\///'`
+  TRACKING_REMOTE=`git config branch.$LOCAL_BRANCH.remote`
+  REMOTE_BRANCH="${TRACKING_REMOTE}/${TRACKING_BRANCH}"
 
   # $ git log origin/master..master
   # commit 4a633f715caf26f6e9495198f89bba20f3402a32
@@ -167,8 +174,8 @@ sbp_parse_git_ahead () {
 
   # If the remote branch is behind the local branch
   # or it has not been merged into origin (remote branch doesn't exist)
-  if (sbp_is_branch1_behind_branch2 "$remote_branch" "$branch" ||
-      ! sbp_branch_exists "$remote_branch"); then
+  if (sbp_is_branch1_behind_branch2 "$REMOTE_BRANCH" "$LOCAL_BRANCH" ||
+      ! sbp_branch_exists "$REMOTE_BRANCH"); then
     # echo our character
     echo 1
   fi
@@ -205,26 +212,17 @@ function sbp_is_on_git() {
 }
 
 function sbp_get_git_status() {
-  # Grab the git dirty and git behind
-  dirty_branch="$(sbp_parse_git_dirty)"
+  # Grab the git branch status
   branch_ahead="$(sbp_parse_git_ahead)"
   branch_behind="$(sbp_parse_git_behind)"
 
   # Iterate through all the cases and if it matches, then echo
-  if [[ "$dirty_branch" == 1 && "$branch_ahead" == 1 && "$branch_behind" == 1 ]]; then
-    echo "$sbp_dirty_unpushed_unpulled_symbol"
-  elif [[ "$branch_ahead" == 1 && "$branch_behind" == 1 ]]; then
+  if [[ "$branch_ahead" == 1 && "$branch_behind" == 1 ]]; then
     echo "$sbp_unpushed_unpulled_symbol"
-  elif [[ "$dirty_branch" == 1 && "$branch_ahead" == 1 ]]; then
-    echo "$sbp_dirty_unpushed_symbol"
   elif [[ "$branch_ahead" == 1 ]]; then
     echo "$sbp_unpushed_symbol"
-  elif [[ "$dirty_branch" == 1 && "$branch_behind" == 1 ]]; then
-    echo "$sbp_dirty_unpulled_symbol"
   elif [[ "$branch_behind" == 1 ]]; then
     echo "$sbp_unpulled_symbol"
-  elif [[ "$dirty_branch" == 1 ]]; then
-    echo "$sbp_dirty_synced_symbol"
   else # clean
     echo "$sbp_synced_symbol"
   fi
@@ -233,17 +231,22 @@ function sbp_get_git_status() {
 sbp_get_git_info () {
   # Grab the branch
   branch="$(sbp_get_git_branch)"
+  # Check for uncommited changes
+  dirty_branch="$(sbp_parse_git_dirty)"
+
+  #Determine if working dir is clean
 
   # If there are any branches
   if [[ "$branch" != "" ]]; then
     # Echo the branch
     output="$branch"
 
-    # Add on the git status
-    output="$output$(sbp_get_git_status)"
-
     # Echo our output
-    echo "$output"
+    printf "$output"
+
+    if [[ "$dirty_branch" == 1 ]]; then
+        printf " ${sbp_dirty_symbol}"
+    fi
   fi
 }
 
@@ -257,11 +260,20 @@ function sbp_get_prompt_symbol() {
   fi
 }
 
+# Surrounds a text string with a preposition color
+function sbp_marker() {
+   printf "\[$sbp_preposition_color\]$1\[$sbp_reset\]"
+}
+
 # Define the sexy-bash-prompt
-PS1="\[$sbp_dir_color\]\w\[$sbp_reset\]\
-\$( sbp_is_on_git && \
-  printf \" \[$sbp_preposition_color\](\[$sbp_reset\] \" && \
-  printf \"\[$sbp_git_status_color\]\$(sbp_get_git_info)\" && \
-  printf \"\[$sbp_git_progress_color\]\$(sbp_get_git_progress)\" && \
-  printf \"\[$sbp_preposition_color\]\") )\n\[$sbp_reset\]\
+PS1="\$( sbp_is_on_git && \
+  printf \"$(sbp_marker \[)\" &&
+  printf \"\[$sbp_git_status_color\]\$(sbp_get_git_info)\[$sbp_reset\]\" &&
+  printf \"$(sbp_marker \]\ )\" &&
+  printf \"$(sbp_marker \()\" &&
+  printf \"\$(sbp_get_git_status)\" &&
+  printf \"$(sbp_marker \))\" &&
+  printf \"\[$sbp_git_progress_color\]\$(sbp_get_git_progress)\[$sbp_reset\]\" \
+  ) \n\
+\[$sbp_dir_color\]\w\[$sbp_reset\] \n\
 \[$sbp_symbol_color\]$(sbp_get_prompt_symbol) \[$sbp_reset\]"
