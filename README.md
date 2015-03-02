@@ -2,7 +2,37 @@
 
 ## Suggested Installation for Mac:
 
-* Create a cron job to keep your remotes updated
+### 1 - Create a cron job to keep your remotes updated
+
+1) Copy `updateRepos.sh` to your home directory `cp updateRepos.sh ~`. Edit it to include the repos you want to keep updated.
+
+2) Add an entry to your crontab file:
+
+Type `crontab -e` to edit the file.
+Add `*/30 * * * * ~/updateRepos.sh`
+You can verify that it's been added by typing `crontab -l`
+
+This will update your repos every 30 minutes (`*/30`)
+
+### 2 - Set up the prompt script
+
+1) Copy `.bash_prompt` to your home directory `cp .bash_prompt ~`
+2) Edit your `~/.profile` file (or create it if it doesn't exist) to include `. ~/.bash_prompt` so that it executes our script.
+
+### 3 - Relaunch your terminal
+
+This will break up the prompt into two lines. The first is the full working directory. The second, is the actual prompt.
+If you navigate to any git repo, it will show you an additional line with the status of that repo:
+
+eg:
+```
+[master † Uncommited Changes] (△ Can Push)
+~/dev/sexy-bash-prompt
+$
+```
+
+Original documentation follows
+<hr>
 
 
 # sexy-bash-prompt [![Build status](https://travis-ci.org/twolfson/sexy-bash-prompt.png?branch=master)](https://travis-ci.org/twolfson/sexy-bash-prompt)
