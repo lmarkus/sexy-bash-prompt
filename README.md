@@ -1,3 +1,10 @@
+# Slightly tweaked fork from the original.
+
+## Suggested Installation for Mac:
+
+* Create a cron job to keep your remotes updated
+
+
 # sexy-bash-prompt [![Build status](https://travis-ci.org/twolfson/sexy-bash-prompt.png?branch=master)](https://travis-ci.org/twolfson/sexy-bash-prompt)
 
 [Bash][bash] prompt with colors, git statuses, and git branches.
