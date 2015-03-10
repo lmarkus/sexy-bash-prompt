@@ -275,7 +275,9 @@ PS1="\$( sbp_is_on_git && \
   printf \"$(sbp_marker \()\" &&
   printf \"\$(sbp_get_git_status)\" &&
   printf \"$(sbp_marker \))\" &&
-  printf \"\[$sbp_git_progress_color\]\$(sbp_get_git_progress)\[$sbp_reset\]\" \
-  ) \n\
-\[$sbp_dir_color\]\w\[$sbp_reset\] \n\
-\[$sbp_symbol_color\]$(sbp_get_prompt_symbol) \[$sbp_reset\]"
+  printf \"\[$sbp_git_progress_color\]\$(sbp_get_git_progress)\[$sbp_reset\]
+\"&&
+  echo \"\n\"
+)\
+\[$sbp_dir_color\]\w \
+\[$sbp_reset\]\[$sbp_symbol_color\]$(sbp_get_prompt_symbol) \[$sbp_reset\]"
