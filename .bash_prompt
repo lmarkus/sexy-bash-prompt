@@ -182,9 +182,11 @@ sbp_parse_git_ahead () {
 }
 
 sbp_parse_git_behind () {
-  # Grab the branch
-  branch="$(sbp_get_git_branch)"
-  remote_branch="origin/$branch"
+  # Grab the local and remote branch
+  LOCAL_BRANCH=`sbp_get_git_branch`
+  TRACKING_BRANCH=`git config branch.$LOCAL_BRANCH.merge | sed -e 's/refs\/heads\///'`
+  TRACKING_REMOTE=`git config branch.$LOCAL_BRANCH.remote`
+  REMOTE_BRANCH="${TRACKING_REMOTE}/${TRACKING_BRANCH}"
 
   # $ git log master..origin/master
   # commit 4a633f715caf26f6e9495198f89bba20f3402a32
@@ -194,7 +196,7 @@ sbp_parse_git_behind () {
   #     Unsynced commit
 
   # If the local branch is behind the remote branch
-  if sbp_is_branch1_behind_branch2 "$branch" "$remote_branch"; then
+  if sbp_is_branch1_behind_branch2 "$LOCAL_BRANCH" "$REMOTE_BRANCH"; then
     # echo our character
     echo 1
   fi
